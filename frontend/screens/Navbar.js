@@ -10,7 +10,6 @@ import Home from './Home';
 import SiteMap from './SiteMap'; 
 import BilleterieScreen from './BilleterieScreen'; 
 
-
 const POINTS_TYPES = {
   RESTAURATION: 'restaurations',
   MAGASINS: 'magasins',
@@ -22,7 +21,7 @@ const Navbar = () => {
   const [showComponent, setShowComponent] = useState(''); // Gère quel composant afficher
   const [showMenu, setShowMenu] = useState(false); // Gère l'affichage du menu
   const [selectedPoint, setSelectedPoint] = useState(null); // Gère le point sélectionné sur la carte
-  const [pointsOfInterest, setPointsOfInterest] = useState({});
+  const [pointsOfInterest, setPointsOfInterest] = useState([]); // Changer en tableau
   const [gpsCoordinates, setGpsCoordinates] = useState(''); // État pour les coordonnées GPS
 
   useEffect(() => {
@@ -34,12 +33,12 @@ const Navbar = () => {
   // Fonction pour récupérer les points d'intérêt en fonction du type
   const fetchPointsOfInterest = async (type) => {
     try {
-      const response = await fetch(`http://localhost:3003/pointsOfInterest`);
+      const response = await fetch(`{API_URL}/pointsOfInterest`);
       const data = await response.json();
 
       // Filtrer les points en fonction du type
       const filteredPoints = data.filter(point => point.type === type);
-      setPointsOfInterest(prev => ({ ...prev, [type]: filteredPoints }));
+      setPointsOfInterest(filteredPoints); // Mettre à jour directement l'état
     } catch (error) {
       console.error(`Erreur lors de la récupération des points ${type}:`, error);
     }
@@ -58,16 +57,13 @@ const Navbar = () => {
 
   // Gestion de la sélection d'un élément du menu
   const handleMenuClick = (item) => {
+    setShowComponent(item);
+    setShowMenu(false);
+    setSelectedPoint(null); // Réinitialiser le point sélectionné
+
+    // Si l'élément est un type de points d'intérêt, récupérez les points d'intérêt
     if (Object.values(POINTS_TYPES).includes(item)) {
-      // Si l'élément est un type de points d'intérêt, ajustez les points d'intérêt et le composant à afficher
-      setShowComponent(item);
-      setShowMenu(false);
-      fetchPointsOfInterest(item.toLowerCase()); // Récupère les points d'intérêt pour le type sélectionné
-    } else {
-      // Pour les autres composants, juste mettre à jour le composant à afficher
-      setShowComponent(item);
-      setShowMenu(false);
-      setSelectedPoint(null); // Réinitialiser le point sélectionné
+      fetchPointsOfInterest(item.toLowerCase());
     }
   };
 
@@ -82,8 +78,7 @@ const Navbar = () => {
 
   const handlePointSelect = (point) => {
     setSelectedPoint(point);
-    // Mettre à jour les coordonnées GPS affichées
-    setGpsCoordinates(`Lat: ${point.latitude}, Lon: ${point.longitude}`);
+    setGpsCoordinates(`Lat: ${point.lat}, Lon: ${point.lng}`);
   };
 
   return (
@@ -94,19 +89,15 @@ const Navbar = () => {
       </View>
 
       <View style={styles.navbar}>
-        {/* Icône du menu hamburger */}
         <TouchableOpacity style={styles.hamburger} onPress={handleHamburgerClick}>
           <Text style={styles.hamburgerText}>☰</Text>
         </TouchableOpacity>
 
-        {/* Logo cliquable */}
         <TouchableOpacity onPress={handleLogoClick}>
-          {/* Utilisation de require pour charger une image locale */}
           <Image source={require('../assets/logo.webp')} style={styles.logo} />
         </TouchableOpacity>
       </View>
 
-      {/* Affichage du menu déroulant si l'état showMenu est vrai */}
       {showMenu && (
         <ScrollView style={styles.menu} contentContainerStyle={styles.menuContainer}>
           <View style={styles.menuColumns}>
@@ -159,18 +150,20 @@ const Navbar = () => {
       {showComponent === 'Informations de Sécurité' && <SecurityInfo />}
       {showComponent === 'Programmes' && <Programs />}
       {showComponent === 'Informations Pratiques et FAQ' && <Faq />}
-      {showComponent === 'Social Médias' && <SocialMedia />}
-      {showComponent === 'Carte Interactive' && (
-        <SiteMap selectedPoint={selectedPoint} pointsOfInterest={pointsOfInterest[showComponent.toLowerCase()]} />
-      )}
-      {showComponent === 'Réseaux Sociaux' && <SocialMedia />}
       {showComponent === 'Partenaires' && <Partners />}
       {showComponent === 'Billeterie' && <BilleterieScreen />}
+      {showComponent === 'Carte Interactive' && (
+        <SiteMap 
+          selectedPoint={selectedPoint}
+          pointsOfInterest={pointsOfInterest} // Passe uniquement les points d'intérêt filtrés
+        />
+      )}
+      {/* Affichage des points d'intérêt uniquement si un type est sélectionné */}
       {Object.values(POINTS_TYPES).includes(showComponent) && (
         <View style={styles.pointsContainer}>
-          {pointsOfInterest[showComponent.toLowerCase()] && pointsOfInterest[showComponent.toLowerCase()].map(point => (
+          {pointsOfInterest.map(point => (
             <TouchableOpacity key={point.id} onPress={() => handlePointSelect(point)} style={styles.pointItem}>
-              <Text style={styles.pointName}>{point.name}</Text>
+              <Text style={styles.pointName}>{point.title}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -223,24 +216,21 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   menuHeader: {
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 10,
   },
   menuItem: {
-    padding: 5,
+    fontSize: 16,
+    paddingVertical: 5,
   },
   gpsContainer: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    backgroundColor: '#fff',
-    padding: 5,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    padding: 10,
+    backgroundColor: '#f0f0f0',
   },
   gpsText: {
-    fontSize: 14,
+    fontSize: 16,
+    color: 'black',
   },
   pointsContainer: {
     padding: 10,
