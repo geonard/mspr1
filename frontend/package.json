@@ -10,7 +10,7 @@
     "build:web": "expo build:web"
   },
   "dependencies": {
-    "@expo/webpack-config": "^0.12.52",
+    "@expo/webpack-config": "^0.14.0",
     "@mapbox/mapbox-sdk": "^0.16.1",
     "@react-native-mapbox-gl/maps": "^8.1.0",
     "axios": "^1.7.7",
@@ -20,7 +20,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.0.0",
     "react-helmet": "^6.1.0",
-    "react-native": "^0.72.17",
+    "react-native": "^0.73.0",
     "react-native-web": "^0.18.12",
     "react-router-dom": "^6.26.2"
   },
